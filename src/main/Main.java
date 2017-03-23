@@ -18,7 +18,7 @@ public class Main {
 		sim.simulate(1_000_000, 0.1);
 		System.out.println("Training QR finished");
 
-		Policy QR = qPlayer.getPolicy();
+		Policy QR = qPlayer.getDeterministicPolicy();
 		sim.setP1(new PolicyPlayer(QR));
 		sim.simulate(1_000_000, 0.1);
 		System.out.println("Evaluation QR finished");

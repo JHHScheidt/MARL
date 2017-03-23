@@ -1,6 +1,7 @@
 package player;
 
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -10,6 +11,7 @@ import main.Action;
 import main.State;
 import main.Tuple;
 import policy.DeterministicPolicy;
+import policy.ProbabilisticPolicy;
 
 public class QLearningPlayer implements Player {
 	private boolean player;
@@ -74,7 +76,7 @@ public class QLearningPlayer implements Player {
 		return reward + discountFactor * max;
 	}
 
-	public DeterministicPolicy getPolicy() {
+	public DeterministicPolicy getDeterministicPolicy() {
 		Map<State, Action> policy = new HashMap<State, Action>();
 		HashSet<State> allStates = new HashSet<State>();
 		for (Tuple<State, Action> sa : this.qValues.keySet()) {
@@ -84,6 +86,30 @@ public class QLearningPlayer implements Player {
 			policy.put(s, bestAction(s));
 		}
 		return new DeterministicPolicy(policy);
+	}
+
+	public ProbabilisticPolicy getProbabilisticPolicy() {
+		Map<State, Double[]> policy = new HashMap<State, Double[]>();
+		HashSet<State> allStates = new HashSet<State>();
+		for (Tuple<State, Action> sa : this.qValues.keySet()) {
+			allStates.add(sa.getS());
+		}
+		for (State s : allStates) {
+			ArrayList<Double> aVals = new ArrayList<>();
+			for(Action a:Action.values()) {
+				Tuple<State, Action> tuple = new Tuple<State, Action>(s, bestAction(s));
+				aVals.add(qValues.get(tuple));
+			}
+			double[] aValsArray = new double[aVals.size()];
+			for(int i = 0; i<aValsArray.length; i++) {
+				aValsArray[i] = aVals.get(i);
+			}
+
+			Tuple<State,double[]> tuple = new Tuple<State, double[]>(s, aValsArray);
+			policy.put(s, qValues.get(tuple));
+		}
+		
+		return new ProbabilisticPolicy(policy);
 	}
 
 	private Action bestAction(State state) {
