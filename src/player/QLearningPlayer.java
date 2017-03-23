@@ -89,7 +89,7 @@ public class QLearningPlayer implements Player {
 	}
 
 	public ProbabilisticPolicy getProbabilisticPolicy() {
-		Map<State, Double[]> policy = new HashMap<State, Double[]>();
+		Map<State, double[]> policy = new HashMap<State, double[]>();
 		HashSet<State> allStates = new HashSet<State>();
 		for (Tuple<State, Action> sa : this.qValues.keySet()) {
 			allStates.add(sa.getS());
@@ -97,7 +97,7 @@ public class QLearningPlayer implements Player {
 		for (State s : allStates) {
 			ArrayList<Double> aVals = new ArrayList<>();
 			for(Action a:Action.values()) {
-				Tuple<State, Action> tuple = new Tuple<State, Action>(s, bestAction(s));
+				Tuple<State, Action> tuple = new Tuple<State, Action>(s, a);
 				aVals.add(qValues.get(tuple));
 			}
 			double[] aValsArray = new double[aVals.size()];
@@ -105,8 +105,7 @@ public class QLearningPlayer implements Player {
 				aValsArray[i] = aVals.get(i);
 			}
 
-			Tuple<State,double[]> tuple = new Tuple<State, double[]>(s, aValsArray);
-			policy.put(s, qValues.get(tuple));
+			policy.put(s, aValsArray);
 		}
 		
 		return new ProbabilisticPolicy(policy);
