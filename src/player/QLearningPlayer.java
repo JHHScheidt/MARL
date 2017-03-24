@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
+import java.util.stream.DoubleStream;
 
 import exploration.ExplorationStrategy;
 import main.Action;
@@ -18,16 +20,18 @@ public class QLearningPlayer implements Player {
 	private State s;
 	private Action a;
 	private double discountFactor;
+	private Random random;
 	private ExplorationStrategy es;
 
 	private Map<Tuple<State, Action>, Double> qValues;
 
-	public QLearningPlayer(boolean player, double discountFactor, ExplorationStrategy es) {
+	public QLearningPlayer(boolean player, double discountFactor, ExplorationStrategy es, Random random) {
 		this.player = player;
 		this.s = null;
 		this.a = null;
 		this.discountFactor = discountFactor;
 		this.es = es;
+		this.random=random;
 		initialize();
 	}
 
@@ -85,7 +89,7 @@ public class QLearningPlayer implements Player {
 		for (State s : allStates) {
 			policy.put(s, bestAction(s));
 		}
-		return new DeterministicPolicy(policy);
+		return new DeterministicPolicy(policy, player);
 	}
 
 	public ProbabilisticPolicy getProbabilisticPolicy() {
@@ -104,11 +108,20 @@ public class QLearningPlayer implements Player {
 			for(int i = 0; i<aValsArray.length; i++) {
 				aValsArray[i] = aVals.get(i);
 			}
+			double sum = DoubleStream.of(aValsArray).sum();
+
+			for(int i = 0; i<aValsArray.length; i++) {
+				aValsArray[i] = aValsArray[i]/sum;
+			}
 
 			policy.put(s, aValsArray);
 		}
 		
-		return new ProbabilisticPolicy(policy);
+		return new ProbabilisticPolicy(policy, this.player, this.random);
+	}
+	
+	public double getQVals(State s, Action a) {
+		return qValues.get(new Tuple<State, Action>(s,a));
 	}
 
 	private Action bestAction(State state) {

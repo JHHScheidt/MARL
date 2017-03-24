@@ -13,8 +13,8 @@ public class RandomExploration implements ExplorationStrategy {
 //		this.random = new Random();
 //	}
 
-	public RandomExploration(int seed) {
-		this.random = new Random(seed);
+	public RandomExploration(Random random) {
+		this.random = random;
 	}
 
 	@Override

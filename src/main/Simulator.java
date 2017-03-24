@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.util.Random;
 
 import player.Player;
+import player.QLearningPlayer;
 
 public class Simulator {
 	private Player p1, p2;
@@ -11,9 +12,10 @@ public class Simulator {
 	
 	private Random random;
 
-	public Simulator(Player p1, Player p2) {
+	public Simulator(Player p1, Player p2, Random random) {
 		this.p1 = p1;
 		this.p2 = p2;
+		this.random = random;
 		resetCounters();
 	}
 
@@ -40,7 +42,6 @@ public class Simulator {
 
 	public void simulate(int steps, double drawProbability) {
 		resetCounters();
-		random = new Random(1024);
 
 		State state = initializeRandomly();
 
@@ -80,6 +81,154 @@ public class Simulator {
 		}
 
 	}
+	
+public void simulate(int steps, double drawProbability, boolean showGame, QLearningPlayer qp1, QLearningPlayer qp2) {
+	resetCounters();
+	random = new Random(1024);
+
+	State state = initializeRandomly();
+
+	for (int i = 0; i < steps; i++) {
+		Action a1 = this.p1.chooseAction(state);
+		Action a2 = this.p2.chooseAction(state);
+		if (this.random.nextDouble() < 0.5) {
+			state = performAction(state, a1, State.FIRST_PLAYER);
+			state = performAction(state, a2, State.SECOND_PLAYER);
+		} else {
+			state = performAction(state, a2, State.SECOND_PLAYER);
+			state = performAction(state, a1, State.FIRST_PLAYER);
+		}
+
+		Point ballPosition = state.getPossession() == State.FIRST_PLAYER ? state.getP1() : state.getP2();
+		boolean resetBoard = false;
+		double rewardP1 = 0.0, rewardP2 = 0.0;
+		if (ballPosition.x == State.MIN_X - 1) { // goal for first player
+			this.goals1++;
+			resetBoard = true;
+			rewardP1 = 1.0;
+			rewardP2 = -1.0;
+		} else if (ballPosition.x == State.MAX_X + 1) { // goal for second
+														// player
+			this.goals2++;
+			resetBoard = true;
+			rewardP1 = -1.0;
+			rewardP2 = 1.0;
+		} 
+//		else if (this.random.nextDouble() < drawProbability) { // draw
+//			resetBoard = true;
+//		}
+		if (resetBoard) {
+			state = initializeRandomly();
+		}
+		this.p1.receiveReward(rewardP1, state, a2);
+		this.p2.receiveReward(rewardP2, state, a1);
+		
+
+		if(showGame) {
+			System.out.println("P1:" + a1);
+			System.out.println("P2:" + a2);
+			for(Action a : Action.values()) {
+				System.out.println("P1 Action "+a+": "+qp1.getQVals(state, a));
+//				System.out.println("P2 Action "+a+": "+qp2.getQVals(state, a));
+			}
+			for(int k = 0; k<=State.MAX_Y; k++) {
+				for(int j =0; j<=State.MAX_X; j++) {
+					Point current = new Point(j,k);
+					if(state.getP1().distance(current)==0) {
+						if(state.getPossession()==State.FIRST_PLAYER) {
+							System.out.print("A ");
+						}
+						else System.out.print("a ");
+					}
+					else if(state.getP2().distance(current)==0) {
+						if(state.getPossession()==State.SECOND_PLAYER) {
+							System.out.print("O ");
+						}
+						else System.out.print("o ");
+					}
+					else System.out.print(". ");
+				}
+				System.out.println();
+			}
+			System.out.println();
+			System.out.println();
+		}
+	}
+}
+
+public void simulate(int steps, double drawProbability, boolean showGame) {
+resetCounters();
+random = new Random(1024);
+
+State state = initializeRandomly();
+
+for (int i = 0; i < steps; i++) {
+	Action a1 = this.p1.chooseAction(state);
+	Action a2 = this.p2.chooseAction(state);
+	if (this.random.nextDouble() < 0.5) {
+		state = performAction(state, a1, State.FIRST_PLAYER);
+		state = performAction(state, a2, State.SECOND_PLAYER);
+	} else {
+		state = performAction(state, a2, State.SECOND_PLAYER);
+		state = performAction(state, a1, State.FIRST_PLAYER);
+	}
+
+	Point ballPosition = state.getPossession() == State.FIRST_PLAYER ? state.getP1() : state.getP2();
+	boolean resetBoard = false;
+	double rewardP1 = 0.0, rewardP2 = 0.0;
+	if (ballPosition.x == State.MIN_X - 1) { // goal for first player
+		this.goals1++;
+		resetBoard = true;
+		rewardP1 = 1.0;
+		rewardP2 = -1.0;
+	} else if (ballPosition.x == State.MAX_X + 1) { // goal for second
+													// player
+		this.goals2++;
+		resetBoard = true;
+		rewardP1 = -1.0;
+		rewardP2 = 1.0;
+	} 
+//	else if (this.random.nextDouble() < drawProbability) { // draw
+//		resetBoard = true;
+//	}
+	if (resetBoard) {
+		state = initializeRandomly();
+	}
+	this.p1.receiveReward(rewardP1, state, a2);
+	this.p2.receiveReward(rewardP2, state, a1);
+	
+
+	if(showGame) {
+		System.out.println("P1:" + a1);
+		System.out.println("P2:" + a2);
+		for(Action a : Action.values()) {
+//			System.out.println("P1 Action "+a+": "+qp1.getQVals(state, a));
+//			System.out.println("P2 Action "+a+": "+qp2.getQVals(state, a));
+		}
+		for(int k = 0; k<=State.MAX_Y; k++) {
+			for(int j =0; j<=State.MAX_X; j++) {
+				Point current = new Point(j,k);
+				if(state.getP1().distance(current)==0) {
+					if(state.getPossession()==State.FIRST_PLAYER) {
+						System.out.print("A ");
+					}
+					else System.out.print("a ");
+				}
+				else if(state.getP2().distance(current)==0) {
+					if(state.getPossession()==State.SECOND_PLAYER) {
+						System.out.print("O ");
+					}
+					else System.out.print("o ");
+				}
+				else System.out.print(". ");
+			}
+			System.out.println();
+		}
+		System.out.println();
+		System.out.println();
+	}
+}
+}
 
 	private State initializeRandomly() {
 		return this.random.nextDouble() < 0.5 ? State.getInitialState(State.FIRST_PLAYER)

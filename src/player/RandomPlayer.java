@@ -9,9 +9,9 @@ public class RandomPlayer implements Player {
 	private Random random;
 	private boolean player;
 
-	public RandomPlayer(boolean player) {
+	public RandomPlayer(boolean player, Random random) {
 		this.player = player;
-		this.random = new Random(1024);
+		this.random = random;
 	}
 	
 	@Override

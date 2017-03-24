@@ -29,15 +29,15 @@ public class MinimaxQPlayer implements Player {
 	private Map<State, double[]> pi;
 	private Map<State,Double> vValues;
 	
-	private final double EXPLOR = 0.2;
+	private final double EXPLOR = 0.1;
 	
 	private double alpha;
 	private double gamma;
 	private double decay;
 
-	public MinimaxQPlayer(boolean player, double discountFactor, double decay, ExplorationStrategy es) {
+	public MinimaxQPlayer(boolean player, double discountFactor, double decay, ExplorationStrategy es, Random random) {
 		this.player = player;
-		random = new Random(1024);
+		this.random = random;
 		initMinimax();
 		this.gamma = discountFactor;
 		this.decay = decay;
@@ -81,18 +81,19 @@ public class MinimaxQPlayer implements Player {
 	public Action chooseAction(State state) {
 		this.s = state;
 		if(random.nextDouble()<EXPLOR) {
-			this.a = new RandomPlayer(this.player).chooseAction(state);
+			this.a = new RandomPlayer(this.player, random).chooseAction(state);
 		}
 		else {
 			double sum = 0;
 			double[] prob = pi.get(state);
 			double r = random.nextDouble();
-			System.out.println(r);
+//			System.out.println(r);
 			for (int i = 0; i <prob.length; i++) {
 				sum = sum + prob[i];
-				System.out.println(sum);
+//				System.out.println(sum);
 				if (r <= sum) {
 					this.a = Action.values()[i];
+					return this.a;
 				}
 			}
 		}
@@ -169,7 +170,7 @@ public class MinimaxQPlayer implements Player {
 	}
 
 	public Policy getPolicy() {
-		return new ProbabilisticPolicy(this.pi);
+		return new ProbabilisticPolicy(this.pi, this.player, this.random);
 	}
 
 }
